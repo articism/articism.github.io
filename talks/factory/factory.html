@@ -1,0 +1,637 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>From Factory to Design Patterns</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/league.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/railscasts.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+          <h1>
+            From "Factory" to Design Patterns 
+          </h1>
+          <br/>
+          <h4>
+            从“工厂”谈设计模式
+          </h4>
+          <br/>
+          <br/>
+          <br/>
+          <em>Tao Zhang</em>
+				</section>
+
+        <section>
+          <img height="200px" src="probably_wrong.png" alt="probably_wrong">
+          <ul>
+            <li class="fragment fade-up"><a href="#/what">What is Factory?</a></li>
+            <li class="fragment fade-up"><a href="#/why">Why use a Factory?</a></li>
+            <li class="fragment fade-up"><a href="#/wtf">Different Factory Design Patterns</a></li>
+            <li class="fragment fade-up"><a href="#/composition_over_inheritance">What's under the Design Patterns</a></li>
+          </ul>
+        </section>
+
+        <section id="refs">
+          <div style="float:left; text-align:left">
+            <img height="250px" src="GoF.jpg" alt="gof">
+            <p>
+            "GoF(Gang of Four)"
+            </p>
+          </div>
+          <div style="text-align:right">
+            <img height="250px" src="headfirst_design_patterns.jpg" alt="headfirst">
+            <p>
+            "Head First"
+            </p>
+          </div>
+        </section>
+
+        <section id="what">
+          <section>
+            <h2>What is a <em style="color: red;">Factory</em> ?</h2>
+            <p class="fragment fade-up">
+              a method which creates an object dynamically(at run-time)
+            </p>
+            <pre class="fragment fade-up"><code class="java" data-trim contenteditable style="width:1000px">
+// instead of creating by 'new'
+Pizza pizza = new CheesePizza(); //whenever you 'new', it has to be a concrete class
+
+// use a factory
+Pizza pizza = createPizza(params);
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>A commonly seen factory</h2>
+            <pre><code class="java" data-trim contenteditable>
+Pizza createPizza(String type) {
+  if (type.equals("cheese")) {
+    return new CheesePizza();
+  } else if (type.equals("clam")) {
+    return new ClamPizza();
+  } else if (type.equals("pepperoni")) {
+    return new PepperoniPizza();
+  } else if (type.equals("veggie")) {
+    return new VeggiePizza();
+  } else return null;
+}
+            </code></pre>
+          </section>
+
+        </section>
+
+
+        <section id="why">
+          <section>
+            <h2>Why do we need a <em style="color: red;">Factory</em> ?</h2>
+          </section>
+
+          <section>
+            <h2>The objects that the factory creates</h2>
+            <img width="80%" src="pizza_hierarchy.png" alt="class diagram">
+          </section>
+
+          <section>
+            <h2>Inheritance and Polymorphism</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class PizzaStore {
+
+  Pizza createPizza(String type) {
+    //dynamically returns an instance of one of Pizza's subclasses
+  }
+
+  public Pizza orderPizza(String type) {
+    Pizza pizza = createPizza(type);
+    System.out.println("--- Making a " + pizza.getName() + " ---");
+    pizza.prepare();
+    pizza.bake();
+    pizza.cut();
+    pizza.box();
+    return pizza;
+  }
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Two Principles of OOP</h2>
+            <br/>
+            <blockquote>
+              &ldquo;Prgram to an interface, not an implementation&rdquo;
+            </blockquote>
+            <div style="text-align:right;">
+              <em> -- GoF, "Design Patterns" </em>
+            </div>
+          </section>
+
+          <section>
+            <h2>The Motive behind</h2>
+              <div style="width:50%; float:left;">
+                <p style="color:yellow;"><strong>createPizza()</strong></p>
+                <p>"Dynamic"</p>
+              </div>
+              <div style="width:50%; float:left;">
+                <p style="color:yellow;"><strong>orderPizza()</strong></p>
+                <p>"Generic", "Abstract", "Reuseable"</p>
+              </div>
+          </section>
+
+          <section>
+            <h2>Factory in Dynamic Lanugages</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class PizzaStore {
+
+  Pizza createPizza(String type) {
+    //dynamically returns an instance of one of Pizza's subclasses
+  }
+
+  public Pizza orderPizza(String type) {
+    Pizza pizza = createPizza(type); 
+    //Ruby: "#{type}Pizza".constantize.new
+
+    System.out.println("--- Making a " + pizza.getName() + " ---");
+    pizza.prepare();
+    pizza.bake();
+    //Ruby: pizza.send("#{type}_bake")
+    pizza.cut();
+    pizza.box();
+    return pizza;
+  }
+}
+            </code></pre>
+          </section>
+
+        </section>
+
+        <section id="simple-factory">
+          <h2 style="color:lime;">Simple Factory Pattern</h2>
+          <p> Dynamically create one of a group of similiar objects, so that a generic method can apply to any of them</p>
+          <img src="simple_factory_pattern.png" alt="simple_factory_pattern">
+        </section>
+
+        <section id="wtf">
+          <section>
+            <h2>Now, What (t.. f...) are these ?</h2>
+            <ul>
+              <li><em> "Abstract Factory" </em></li>
+              <li><em> "Factory Method" </em></li>
+            </ul>
+            <p class="fragment fade-up"> They are both design patterns that can create <span class="fragment highlight-red">families</span> of related objects</p>
+          </section>
+
+          <section>
+            <h2>2 Families of Pizzas</h2>
+            <ul>
+              <li>New York Style</li>
+              <li>Chicago Style</li>
+            </ul>
+            <img class="fragment fade-up" src="pizza_with_families.png" alt="class diagram">
+          </section>
+
+          <section>
+            <h2 style="color:lime;" id="factory_method_pattern">Factory Method Pattern</h2>
+            <img src="factory_method_pattern.png" alt="factory_method_pattern">
+          </section>
+
+          <section>
+            <h2>Inheritance</h2>
+            <pre><code class="java" data-trim contenteditable style="max-height:600px">
+public class PizzaStore {
+  //factory method is now abstract
+  abstract Pizza createPizza(String type); 
+
+  ...
+}
+
+public class ChicagoPizzaStore extends PizzaStore {
+  Pizza createPizza(String type) {
+    if (type.equals("cheese")) {
+      return new ChicagoStyleCheesePizza();
+    } else if (type.equals("veggie")) {
+      return new ChicagoStyleVeggiePizza();
+    } else if (type.equals("clam")) {
+      return new ChicagoStyleClamPizza();
+    } else if (type.equals("pepperoni")) {
+      return new ChicagoStylePepperoniPizza();
+    } else return null;
+  }
+}
+            </code></pre>
+            <p class="fragment fade-up">
+            <em>Factory Method Pattern</em> is nothing but <em>Class Inheritance</em>
+            </p>
+          </section>
+
+          <section>
+            <h2>In fact ...</h2>
+            <div>
+              <img height="150px" src="GoF.jpg" alt="headfirst"/>
+              <blockquote>
+                &ldquo;Factory Method lets a class defer instantiation to subclasses.&rdquo;
+              </blockquote>
+            </div>
+          </section>
+
+          <section>
+            <h2>In fact ...</h2>
+            <p class="fragment fade-up">Really just a ...</p>
+            <h2 style="color:lime;" class="fragment fade-up">Template Pattern</h2>
+            <p class="fragment fade-up">used upon the createPizza() method</p>
+            <br/>
+            <br/>
+            <p class="fragment fade-up">and ...</p>
+            <p class="fragment fade-up"><em>Template Pattern</em> is really nothing but <em>Class Inheritance</em></p>
+          </section>
+
+          <section>
+            <h2 style="color:lime;" id="abstract_factory_pattern">Abstract Factory Pattern</h2>
+            Instead of <em>inheritance</em>, use <em>composition</em>
+          </section>
+
+          <section>
+            <h2>Compostion</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class PizzaStore {
+  // "has-a"
+  PizzaFactory pizzaFactory;
+
+  public PizzaStore(PizzaFactory factory) {
+    this.pizzaFactory = factory;
+  }
+
+
+  public Pizza orderPizza(String type) {
+    // delegate the factory method to an (member) object
+    pizza = factory.createPizza(type);
+    ...
+  }
+}
+            </code></pre>
+          </section>
+          <section>
+            <h2>Compostion</h2>
+            <p> the factory method is wrapped into an object</p>
+            <img src="factory_pattern_delegate.png" alt="factory_pattern_delegate"/>
+            <p>The compostional version of </p>
+            <p> &#8592; <em>Simple Factory Pattern</em> </p>
+          </section>
+
+          <section>
+            <h2 style="color:lime;" id="abstract_factory_pattern">Abstract Factory Pattern</h2>
+            <img src="abstract_factory_pattern.png" alt="abstract_factory_pattern"/>
+            <p class="fragment fade-up">(at run-time) delegate the createPizza() method to a particular subclass</p>
+          </section>
+
+          <section>
+            <h2>A Common Confusion</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class ChicagoPizzaFactory extends PizzaFactory {
+
+  Pizza createPizza(String type) {
+    if (type.equals("cheese")) {
+      return new ChicagoStyleCheesePizza();
+    } else if (type.equals("veggie")) {
+      return new ChicagoStyleVeggiePizza();
+    } else if (type.equals("clam")) {
+      return new ChicagoStyleClamPizza();
+    } else if (type.equals("pepperoni")) {
+      return new ChicagoStylePepperoniPizza();
+    } else return null;
+  }
+}
+            </code></pre>
+            <div class="fragment fade-up">
+             That's why I heard: 
+              <blockquote>
+                &ldquo;There's a <em>Factory Method Pattern</em> inside <em>Abstract Factory Pattern</em>&rdquo; 😱 ...
+              </blockquote>
+            </div>
+          </section>
+          <section>
+            <h2>Making it more confusing ...</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class PizzaStore {
+
+  PizzaFactory pizzaFactory;
+
+  //slightly improve the constructor 
+  public PizzaStore(String style) {
+    if (style.equals("Chicago")) {
+      pizzaFactory = new ChicagoPizzaFactory();
+    }else if (style.equals("New York")) {
+      pizzaFactory = new NYPizzaFactory();
+    }
+  }
+
+  ...
+}
+            </code></pre>
+            <p> the constructor is now a <em>Simple Factory</em> method, so ...</p> 
+            <blockquote class="fragment fade-up">
+              &ldquo;There's also a <em>Simple Factory Pattern</em> inside <em>Abstract Factory Pattern</em>&rdquo; 😱 ...
+            </blockquote>
+
+          </section>
+        </section>
+
+        <section id="composition_over_inheritance">
+          <section id="any_better">
+            <h2>Think Deeper</h2>
+            <div style="width:50%; float:left;">
+              <p>Factory Method Pattern</p>
+              <img src="factory_method_pattern.png" alt="factory_method_pattern">
+            </div>
+            <div style="width:50%; float:left;">
+              <p>Abstract Factory Pattern</p>
+              <img src="abstract_factory_pattern.png" alt="abstract_factory_pattern"/>
+            </div>
+            <div style="width:100%; float:left;">
+              <h2 class="fragment fade-up">Any Better?</h2>
+            </div>
+          </section>
+          
+          <section>
+            <h2>Two Principles of OOP</h2>
+            <br/>
+            <blockquote>
+              &ldquo;Favor object composition over class inheritance&rdquo;
+            </blockquote>
+            <div style="text-align:right;">
+              <em> -- GoF, "Design Patterns" </em>
+            </div>
+          </section>
+
+          <section>
+            <h2>What happens at "run-time"</h2>
+            <div>
+              <p>Factory Method Pattern</p>
+              <pre><code class="java" data-trim contenteditable>
+pizzaStore = new ChicagoPizzaStore();
+              </code></pre>
+            </div>
+            <br/>
+            <div>
+              <p>Abstract Factory Pattern</p>
+              <pre><code class="java" data-trim contenteditable>
+pizzaFactory = new ChicagoPizzaFactory();
+pizzaStore = new PizzaStore(pizzaFactory);
+...
+//and later
+pizzaStore.setPizzaFactory(new NYPizzaFactory());
+              </code></pre>
+            </div>
+            <p class="fragment fade-up" style="color:yellow">If you favor <em>Compostion</em>, you program to interface, not to implementation</p>
+            <p class="fragment fade-up">in terms of object creation, the two principles are one!</p>
+          </section>
+
+          <section>
+            <div style="width:50%; float:left;">
+              <h2>What's bad about Inheritance</h2>
+              <ul>
+                <li>
+                Implementation fixed at complie time   => Tight coupling between parent-child classes
+                <ol style="font-size: 80%;">
+                  <li class="fragment fade-up">any change in the parent class's implementation will force the subclass to change</li>
+                  <li class="fragment fade-up">should any aspect of the subclass not be appropriate for new problems, the parent class must be rewritten</li>
+                </ol>
+                </li>
+              </ul>
+            </div>
+
+            <div style="width:50%; float:left;">
+              <h2>What's good about Compostion</h2>
+              <ul>
+                <li>Implementation changable at run time    => Loose coupling (on interfaces)</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>In fact ...</h2>
+            <p class="fragment fade-up"><em>Abstract Facotry</em> is really just a ...</p>
+            <h2 style="color:lime;" class="fragment fade-up">Strategy Pattern</h2>
+            <p class="fragment fade-up">used upon the createPizza() method</p>
+            <br/>
+            <br/>
+            <p class="fragment fade-up">and ...</p>
+            <p class="fragment fade-up"><em>Strategy Pattern</em> is just how <em>Composition</em> is implemented</p>
+          </section>
+
+          <section>
+            <h2>Strategy Pattern (with Java 8)</h2>
+            <pre><code class="java" data-trim contenteditable>
+public class PizzaStore {
+  //no factory delegate needed
+  //PizzaFactory pizzaFactory;
+
+  //public PizzaStore(PizzaFactory factory) {
+  //  this.pizzaFactory = factory;
+  //}
+
+  public Pizza orderPizza(String type, PizzaFactory createPizza) {
+    pizza = createPizza(type);
+    ...
+  }
+}
+            </code></pre>
+            <p class="fragment fade-up">just a method wrapped into an object</p>
+          </section>
+
+          <section>
+            <h2>Strategy Pattern (with Java 8)</h2>
+            <pre><code class="java" data-trim contenteditable>
+pizzaStore = new PizzaStore();
+pizzaType = ... //get from a db query
+
+//pass in strategy on the fly, no class hierarchy needed
+pizzaStore.orderPizza(pizzaType, 
+                      type -> {
+                        if (type.equals("cheese")) {
+                          return new ChicagoStyleCheesePizza();
+                        } else if (type.equals("veggie")) {
+                          return new ChicagoStyleVeggiePizza();
+                        } else if (type.equals("clam")) {
+                          return new ChicagoStyleClamPizza();
+                        } else if (type.equals("pepperoni")) {
+                          return new ChicagoStylePepperoniPizza();
+                        } else return null;
+                      }); 
+            </code></pre>
+            <p style="font-size: 80%;">(not a good example though)</p>
+          </section>
+
+          <section>
+            <h2>Strategy Pattern in Dynamic Languages</h2>
+            <pre><code class="ruby" data-trim contenteditable>
+class PizzaStore
+  def order_pizza(String type)
+    # delegate the factory method to the block
+    pizza = yield type
+    ...
+  end
+end
+
+pizza_store = PizzaStore.new
+pizza_type = ... # get from a db query
+
+# strategy as a block
+pizza_store.order_pizza(pizza_type) do |type|
+  "ChicagoStyle#{type}Pizza".constantize.new
+end
+            </code></pre>
+            <p style="font-size: 80%;">(not a good example though)</p>
+          </section>
+
+          <section>
+            <h2>Now what if ...</h2>
+            <div style="width:100%; float:left;">
+              I want to extend PizzaStore to have FranchiseePizzaStore and SelfRunPizzaStore?
+            </div>
+            <div style="width:50%; float:left;">
+              <img src="factory_method_pattern.png" alt="factory_method_pattern">
+              <p>Factory Method Pattern</p>
+            </div>
+            <div style="width:50%; float:left;">
+              <img src="abstract_factory_pattern.png" alt="abstract_factory_pattern"/>
+              <p>Abstract Factory Pattern</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>What happens with Inheritance</h2>
+            <img width="80%" src="pizza_store_hierarchy.png" alt="class diagram">
+            <ul>
+              <li class="fragment fade-up">n*m class explosion</li>
+              <li class="fragment fade-up">code duplication</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>What happens with Compostion</h2>
+            <img width="80%" src="bridge_pattern.png" alt="class diagram">
+            <h2 style="color:lime;" class="fragment fade-up">Bridge Pattern</h2>
+            <p class="fragment fade-up">a.k.a <em style="color:lime;">Handler</em></p>
+          </section>
+
+          <section>
+            <div style="width:50%; float:left;">
+              <h2>What's bad about Inheritance</h2>
+              <ul>
+                <li class="fragment fade-up">Deep class hierarchy is usually unhealthy</li>
+              </ul>
+            </div>
+
+            <div style="width:50%; float:left;">
+              <h2>What's good about Compostion</h2>
+              <ul>
+                <li class="fragment fade-up">Small class hieararchy   => more objects, fewer classes</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>Similar Problems</h2>
+            <h2>with the Pizza class hierarchy</h2>
+            <img width="80%" src="pizza_with_families.png" alt="class diagram">
+          </section>
+
+          <section>
+            <h2>Improvement</h2>
+            <div>
+              <img height="150px" src="headfirst_design_patterns.jpg" alt="headfirst"/>
+                <em>"Encapsulate what varies"</em>
+              <pre class="fragment fade-up"><code class="java" data-trim contenteditable>
+public class Pizza {
+	PizzaIngredientFactory ingredientFactory;
+ 
+	public Pizza(PizzaIngredientFactory ingredientFactory) {
+		this.ingredientFactory = ingredientFactory;
+	}
+ 
+	void prepare() {
+		System.out.println("Preparing " + name);
+		dough = ingredientFactory.createDough();
+		sauce = ingredientFactory.createSauce();
+		cheese = ingredientFactory.createCheese();
+		veggies = ingredientFactory.createVeggies();
+		pepperoni = ingredientFactory.createPepperoni();
+	}
+}
+              </code></pre>
+            </div>
+          </section>
+
+        </section>
+
+
+
+        <section id="end">
+          <section>
+            <h2>Recap</h2>
+            <h3 style="color:lime;">Simple Factory, Abstract Factory, Factory Method, Template, Strategy, Bridge</h3>
+            <div class="fragment fade-up" style="font-size: 80%;">
+              It really doesn't matter, 
+              if you don't know precisely what a particular Factory Pattern is, 
+              as long as you know:
+            </div>
+            <br/>
+            <ul class="fragment fade-up">
+              <li>What a factory does(the motive behind)</li>
+              <li>How to implement inheritance and composition</li>
+              <li>The 2 principles of OOP</li>
+            </ul>
+          </section>
+          <section>
+            <h2>Last Remark</h2>
+            <p> How objects are created is really fundemental to OOP</p>
+            <p class="fragment fade-up"> Be aware of the problems with Class Hierarchy</p>
+          </section>
+        </section>
+
+
+        <section id="to_be_continued" data-background="qingkanxiaji.jpg">
+          <h3 style="text-align:left"> coming up next ... </h3>
+          <h1 style="color: black;">Prototypal Inheritance</h1>
+        </section>
+
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+        transition: 'convex',
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
